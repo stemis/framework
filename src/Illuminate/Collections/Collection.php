@@ -10,21 +10,30 @@ use Illuminate\Support\Traits\EnumeratesValues;
 use Illuminate\Support\Traits\Macroable;
 use stdClass;
 
+/**
+ * @template TKey as array-key
+ * @template TValue
+ * @implements \ArrayAccess<TKey, TValue>
+ * @implements \Illuminate\Support\Enumerable<TKey, TValue>
+ */
 class Collection implements ArrayAccess, Enumerable
 {
+    /**
+     * @use \Illuminate\Support\Traits\EnumeratesValues<TKey, TValue>
+     */
     use EnumeratesValues, Macroable;
 
     /**
      * The items contained in the collection.
      *
-     * @var array
+     * @var array<TKey, TValue>
      */
     protected $items = [];
 
     /**
      * Create a new collection.
      *
-     * @param  mixed  $items
+     * @param  \Illuminate\Contracts\Support\Arrayable<TKey, TValue>|iterable<TKey, TValue>|null  $items
      * @return void
      */
     public function __construct($items = [])
@@ -37,7 +46,7 @@ class Collection implements ArrayAccess, Enumerable
      *
      * @param  int  $from
      * @param  int  $to
-     * @return static
+     * @return static<int, int>
      */
     public static function range($from, $to)
     {
@@ -47,7 +56,7 @@ class Collection implements ArrayAccess, Enumerable
     /**
      * Get all of the items in the collection.
      *
-     * @return array
+     * @return array<TKey, TValue>
      */
     public function all()
     {
@@ -67,8 +76,8 @@ class Collection implements ArrayAccess, Enumerable
     /**
      * Get the average value of a given key.
      *
-     * @param  callable|string|null  $callback
-     * @return mixed
+     * @param  (callable(TValue): float|int)|string|null  $callback
+     * @return float|int|null
      */
     public function avg($callback = null)
     {
@@ -88,8 +97,8 @@ class Collection implements ArrayAccess, Enumerable
     /**
      * Get the median of a given key.
      *
-     * @param  string|array|null  $key
-     * @return mixed
+     * @param  string|array<array-key, string>|null  $key
+     * @return float|int|null
      */
     public function median($key = null)
     {
@@ -118,8 +127,8 @@ class Collection implements ArrayAccess, Enumerable
     /**
      * Get the mode of a given key.
      *
-     * @param  string|array|null  $key
-     * @return array|null
+     * @param  string|array<array-key, string>|null  $key
+     * @return array<int, float|int>|null
      */
     public function mode($key = null)
     {
@@ -147,7 +156,7 @@ class Collection implements ArrayAccess, Enumerable
     /**
      * Collapse the collection of items into a single array.
      *
-     * @return static
+     * @return static<int, mixed>
      */
     public function collapse()
     {
@@ -157,9 +166,9 @@ class Collection implements ArrayAccess, Enumerable
     /**
      * Determine if an item exists in the collection.
      *
-     * @param  mixed  $key
-     * @param  mixed  $operator
-     * @param  mixed  $value
+     * @param  (callable(TValue): bool)|TValue|string  $key
+     * @param  TValue|string|null  $operator
+     * @param  TValue|null  $value
      * @return bool
      */
     public function contains($key, $operator = null, $value = null)
@@ -180,8 +189,11 @@ class Collection implements ArrayAccess, Enumerable
     /**
      * Cross join with the given lists, returning all possible permutations.
      *
-     * @param  mixed  ...$lists
-     * @return static
+     * @template TCrossJoinKey
+     * @template TCrossJoinValue
+     *
+     * @param  \Illuminate\Contracts\Support\Arrayable<TCrossJoinKey, TCrossJoinValue>|iterable<TCrossJoinKey, TCrossJoinValue>  ...$lists
+     * @return static<int, array<int, TValue|TCrossJoinValue>>
      */
     public function crossJoin(...$lists)
     {
@@ -193,8 +205,8 @@ class Collection implements ArrayAccess, Enumerable
     /**
      * Get the items in the collection that are not present in the given items.
      *
-     * @param  mixed  $items
-     * @return static
+     * @param  \Illuminate\Contracts\Support\Arrayable<array-key, TValue>|iterable<array-key, TValue>  $items
+     * @return static<TKey, TValue>
      */
     public function diff($items)
     {
@@ -204,9 +216,9 @@ class Collection implements ArrayAccess, Enumerable
     /**
      * Get the items in the collection that are not present in the given items, using the callback.
      *
-     * @param  mixed  $items
-     * @param  callable  $callback
-     * @return static
+     * @param  \Illuminate\Contracts\Support\Arrayable<array-key, TValue>|iterable<array-key, TValue>  $items
+     * @param  callable(TValue): int  $callback
+     * @return static<TKey, TValue>
      */
     public function diffUsing($items, callable $callback)
     {
@@ -352,9 +364,11 @@ class Collection implements ArrayAccess, Enumerable
     /**
      * Get the first item from the collection passing the given truth test.
      *
-     * @param  callable|null  $callback
-     * @param  mixed  $default
-     * @return mixed
+     * @template TFirstDefaultValue
+     *
+     * @param  (callable(TValue): bool)|null  $callback
+     * @param  TFirstDefaultValue  $default
+     * @return TValue|TFirstDefaultValue
      */
     public function first(callable $callback = null, $default = null)
     {
@@ -400,9 +414,11 @@ class Collection implements ArrayAccess, Enumerable
     /**
      * Get an item from the collection by key.
      *
-     * @param  mixed  $key
-     * @param  mixed  $default
-     * @return mixed
+     * @template TGetDefault
+     *
+     * @param  TKey  $key
+     * @param  TGetDefault  $default
+     * @return TValue|TGetDefault
      */
     public function get($key, $default = null)
     {
